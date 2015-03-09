@@ -103,7 +103,7 @@ end
 
 # Begin Program
 
-data = parse_csv("./cli-data.csv")
+data = parse_csv("./test.csv")
 
 data.keys.each do |user_id|
   data[user_id].keys.each do |term|
