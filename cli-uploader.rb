@@ -6,8 +6,12 @@ require "addressable/uri"
 
 #OPTIONS
 SEPARATOR = "\t"
-FILE_NAME = "./test.csv"
+CSV_PATH = "./test1.csv" #can be set by command line argument as well
 ADMIN_COOKIE = "579742449f0af01d5f94826244c96f2c"
+HOST = "admin.qa.viglink.com"
+ESCAPE_SEQ_FORWARD_SLASH = "%2F"
+VALID_URL_TYPES = ["DL", "SL"]
+MAX_PHRASE_SIZE = 80
 
 def parse_csv(csv_path)
   csv_opts = {
@@ -29,13 +33,8 @@ def parse_csv(csv_path)
     dest = row[3].strip
     country = row[4]
 
-    unless data.has_key?( user_id )
-      data[user_id] = {}
-    end
-
-    unless data[user_id].has_key?(term)
-      data[user_id][term] = []
-    end
+    data[user_id] = {} unless data.has_key?( user_id )
+    data[user_id][term] = [] unless data[user_id].has_key?( term )
 
     destination = {
       :url => dest,
@@ -49,7 +48,6 @@ def parse_csv(csv_path)
   data
 
 end
-
 
 # Validation Functions
 
@@ -69,19 +67,14 @@ def valid_dest?(url)
 end
 
 def valid_dest_type?(type)
-  valid_types = ["DL", "SL"]
-
-  is_valid = valid_types.include?(type)
-
+  is_valid = VALID_URL_TYPES.include?(type)
   puts "Validation Error: Invalid destination type (must be deep link or search link)" unless is_valid
 
   is_valid
 end
 
 def valid_term?(term)
-  p term
-  is_valid = term.length <= 80
-
+  is_valid = term.length <= MAX_PHRASE_SIZE
   puts "Validation Error: Phrase length must be less than 80 characters" unless is_valid
 
   is_valid
@@ -91,28 +84,48 @@ end
 # Request Functions
 
 def format_path(user_id, term)
-  path = "/users/" + user_id.to_s + "/ci-terms/" + term.gsub("/", "%2F")
+  path = "/users/" + user_id.to_s + "/ci-terms/" + term.gsub("/", ESCAPE_SEQ_FORWARD_SLASH)
 
   Addressable::URI.encode_component(path, Addressable::URI::CharacterClasses::QUERY)
 end
 
 def make_request(path, payload)
-  host = "admin.qa.viglink.com"
-
   #Note - if this stops working, use your own vglnk.Agent.q cookie valued
   cookie = CGI::Cookie.new("vglnk.Agent.q", ADMIN_COOKIE)
 
   req = Net::HTTP::Put.new(path, initheader = { 'Content-Type' => 'application/json'})
   req.body = payload
   req['Cookie'] = cookie.to_s
-  response = Net::HTTP.new(host).start {|http| http.request(req) }
+  response = Net::HTTP.new(HOST).start {|http| http.request(req) }
+
   puts "Uploaded: " + path + " -- " + response.code.to_s
 end
 
 
+#TODO command line args?
+# Process command line arguments
+#   i = 0
+# while i < ARGV.length
+#   case ARGV[i]
+#     when "--path"
+#       csv_path = ARGV[i + 1]
+#     when "--separator"
+#       separator = ARGV[i + 1]
+#     when "--cookie"
+#       admin_cookie = ARGV[i + 1]
+#     else
+#   end
+#
+#   i += 1
+# end
+#
+
+csv_path = CSV_PATH
+csv_path = ARGV[0] if ARGV.length == 1
+
 # Begin Program
 
-data = parse_csv(FILE_NAME)
+data = parse_csv(csv_path)
 
 data.keys.each do |user_id|
   data[user_id].keys.each do |term|
