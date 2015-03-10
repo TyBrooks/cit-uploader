@@ -6,7 +6,7 @@ require "addressable/uri"
 
 #OPTIONS
 SEPARATOR = "\t"
-CSV_PATH = "./test1.csv" #can be set by command line argument as well
+CSV_PATH = "./test.csv" #can be set by command line argument as well
 ADMIN_COOKIE = "579742449f0af01d5f94826244c96f2c"
 HOST = "admin.qa.viglink.com"
 ESCAPE_SEQ_FORWARD_SLASH = "%2F"
@@ -20,10 +20,17 @@ def parse_csv(csv_path)
 
   data = {}
 
-  CSV.foreach(csv_path, csv_opts) do |row|
-    unless valid_row?(row)
-      puts "Row Failing Validation: " + row.to_s
+  row_index = 0
+  error_rows = []
 
+  CSV.foreach(csv_path, csv_opts) do |row|
+    row_index += 1
+    unless valid_row?(row)
+      puts "Row Failing Validation: " + row_index.to_s
+      puts row.to_s
+      puts
+
+      error_rows.push(row_index)
       next
     end
 
@@ -43,6 +50,23 @@ def parse_csv(csv_path)
     }
 
     data[user_id][term].push(destination)
+  end
+
+  #error handling
+  num_errors = error_rows.length
+  if num_errors != 0
+    puts "Your CSV had " + num_errors.to_s + " rows that failed validation."
+    puts "Row errors: " + error_rows.to_s
+
+    choice = ""
+    while choice.length < 1 || !["y", "n"].include?(choice[0].downcase)
+      puts "Continue with upload of passing rows? (y)es/(n)o?"
+      choice = gets.chomp
+    end
+
+    if choice == "n"
+      abort("CSV Error -- User aborted")
+    end
   end
 
   data
