@@ -5,6 +5,7 @@ require "cgi"
 
 #OPTIONS
 SEPARATOR = "\t" # CSV separator (by default we're expecting Tab separated values)
+NUM_COLS = 5
 CSV_PATH = "./data.csv" #can be set by command line argument as well
 VALID_URL_TYPES = ["DL", "SL"] # Currently supports deep links and search links only
 MAX_PHRASE_SIZE = 80 # max size of terms
@@ -93,7 +94,14 @@ def valid_row?(row)
   term = row[2].strip
   user_id = row[0].strip
 
-  valid_dest?(dest) && valid_dest_type?(dest_type) && valid_term?(term) && valid_user_id?(user_id)
+  valid_dest?( dest ) && valid_dest_type?( dest_type ) && valid_term?( term ) && valid_user_id?( user_id ) && valid_row_length( row.length )
+end
+
+def valid_row_length?( length )
+  is_valid = length == NUM_COLS
+  puts "Validation Error: Wrong number of fields for row" unless is_valid
+
+  is_valid
 end
 
 def valid_dest?(url)
