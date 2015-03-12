@@ -2,16 +2,29 @@ require "CSV"
 require "net/http"
 require "json"
 require "cgi"
-require "addressable/uri"
 
 #OPTIONS
 SEPARATOR = "\t"
-CSV_PATH = "./test.csv" #can be set by command line argument as well
-ADMIN_COOKIE = "579742449f0af01d5f94826244c96f2c"
-HOST = "admin.qa.viglink.com"
+CSV_PATH = "./data.csv" #can be set by command line argument as well
 ESCAPE_SEQ_FORWARD_SLASH = "%2F"
 VALID_URL_TYPES = ["DL", "SL"]
 MAX_PHRASE_SIZE = 80
+
+USE_QA = true # whether to use production or qa settings below
+#Production settings
+HOST = "admin.viglink.com"
+COOKIE_NAME = "vglnk.Agent.p"
+COOKIE_VALUE = "d9e2f09a7d941d06475de57eca5d874f"
+#QA settings
+QA_HOST = "admin.qa.viglink.com"
+QA_COOKIE_NAME = "vglnk.Agent.q"
+QA_COOKIE_VALUE = "579742449f0af01d5f94826244c96f2c"
+
+class String
+  def is_integer?
+    self.to_i.to_s == self
+  end
+end
 
 def parse_csv(csv_path)
   csv_opts = {
@@ -58,10 +71,10 @@ def parse_csv(csv_path)
     puts "Your CSV had " + num_errors.to_s + " rows that failed validation."
     puts "Row errors: " + error_rows.to_s
 
-    choice = ""
-    while choice.length < 1 || !["y", "n"].include?(choice[0].downcase)
+    choice = nil
+    while choice.nil? || choice.length < 1 || !["y", "n"].include?(choice[0].downcase)
       puts "Continue with upload of passing rows? (y)es/(n)o?"
-      choice = gets.chomp
+      choice = STDIN.gets.chomp
     end
 
     if choice == "n"
@@ -79,8 +92,9 @@ def valid_row?(row)
   dest = row[3].strip
   dest_type = row[1]
   term = row[2].strip
+  user_id = row[0].strip
 
-  valid_dest?(dest) && valid_dest_type?(dest_type) && valid_term?(term)
+  valid_dest?(dest) && valid_dest_type?(dest_type) && valid_term?(term) && valid_user_id?(user_id)
 end
 
 def valid_dest?(url)
@@ -104,23 +118,33 @@ def valid_term?(term)
   is_valid
 end
 
+def valid_user_id?(user_id)
+  is_valid = user_id.is_integer?
+  puts "Validation Error: user_id is not integer" unless is_valid
+
+  is_valid
+end
+
 
 # Request Functions
 
 def format_path(user_id, term)
-  path = "/users/" + user_id.to_s + "/ci-terms/" + term.gsub("/", ESCAPE_SEQ_FORWARD_SLASH)
-
-  Addressable::URI.encode_component(path, Addressable::URI::CharacterClasses::QUERY)
+  term_escaped = term.split(" ").map{ |word| CGI.escape(word) }.join("%20")
+  "/users/" + user_id.to_s + "/ci-terms/" + term_escaped
 end
 
 def make_request(path, payload)
   #Note - if this stops working, use your own vglnk.Agent.q cookie valued
-  cookie = CGI::Cookie.new("vglnk.Agent.q", ADMIN_COOKIE)
+  cookie_name = ( USE_QA ) ? QA_COOKIE_NAME : COOKIE_NAME
+  cookie_value = ( USE_QA ) ? QA_COOKIE_VALUE : COOKIE_VALUE
+  host = ( USE_QA ) ? QA_HOST : HOST
 
-  req = Net::HTTP::Put.new(path, initheader = { 'Content-Type' => 'application/json'})
+  cookie = CGI::Cookie.new( cookie_name, cookie_value )
+
+  req = Net::HTTP::Put.new( path, initheader = { 'Content-Type' => 'application/json'})
   req.body = payload
   req['Cookie'] = cookie.to_s
-  response = Net::HTTP.new(HOST).start {|http| http.request(req) }
+  response = Net::HTTP.new( host ).start { |http| http.request(req) }
 
   puts "Uploaded: " + path + " -- " + response.code.to_s
 end
