@@ -26,8 +26,8 @@
       <file leaf-file-name="cli-uploader.rb" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/cli-uploader.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.5277361" vertical-offset="1913" max-vertical-offset="2910">
-              <caret line="151" column="0" selection-start-line="151" selection-start-column="0" selection-end-line="151" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.2353823" vertical-offset="803" max-vertical-offset="2610">
+              <caret line="64" column="5" selection-start-line="64" selection-start-column="5" selection-end-line="64" selection-end-column="5" />
               <folding />
             </state>
           </provider>
@@ -465,8 +465,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/cli-uploader.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5277361" vertical-offset="1913" max-vertical-offset="2910">
-          <caret line="151" column="0" selection-start-line="151" selection-start-column="0" selection-end-line="151" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.2353823" vertical-offset="803" max-vertical-offset="2610">
+          <caret line="64" column="5" selection-start-line="64" selection-start-column="5" selection-end-line="64" selection-end-column="5" />
           <folding />
         </state>
       </provider>

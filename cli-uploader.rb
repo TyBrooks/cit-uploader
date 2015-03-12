@@ -4,11 +4,10 @@ require "json"
 require "cgi"
 
 #OPTIONS
-SEPARATOR = "\t"
+SEPARATOR = "\t" # CSV separator (by default we're expecting Tab separated values)
 CSV_PATH = "./data.csv" #can be set by command line argument as well
-ESCAPE_SEQ_FORWARD_SLASH = "%2F"
-VALID_URL_TYPES = ["DL", "SL"]
-MAX_PHRASE_SIZE = 80
+VALID_URL_TYPES = ["DL", "SL"] # Currently supports deep links and search links only
+MAX_PHRASE_SIZE = 80 # max size of terms
 
 USE_QA = true # whether to use production or qa settings below
 #Production settings
@@ -148,25 +147,6 @@ def make_request(path, payload)
 
   puts "Uploaded: " + path + " -- " + response.code.to_s
 end
-
-
-#TODO command line args?
-# Process command line arguments
-#   i = 0
-# while i < ARGV.length
-#   case ARGV[i]
-#     when "--path"
-#       csv_path = ARGV[i + 1]
-#     when "--separator"
-#       separator = ARGV[i + 1]
-#     when "--cookie"
-#       admin_cookie = ARGV[i + 1]
-#     else
-#   end
-#
-#   i += 1
-# end
-#
 
 csv_path = CSV_PATH
 csv_path = ARGV[0] if ARGV.length == 1
